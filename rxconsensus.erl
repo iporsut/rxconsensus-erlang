@@ -26,6 +26,7 @@ consensus(TrueVote, FalseVote, VoteList, WaitingVoter) ->
 	    consensus(TrueVote, FalseVote+1,VoteList ++ [false], WaitingVoter - 1)
     end.
 
+
 start_vote() ->
     spawn(?MODULE, voter, [self()]),
     spawn(?MODULE, voter, [self()]),
