@@ -5,7 +5,7 @@
 voter(OutputProcess) ->
     {S1,S2,S3} = now(),
     random:seed(S1,S2,S3),
-    N = random:uniform(3),
+    N = random:uniform(3) * 1000,
     T = random:uniform(2),
     Vote = (T rem 2) =:= 0,
     receive
