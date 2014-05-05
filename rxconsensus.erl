@@ -17,12 +17,16 @@ voter(OutputProcess) ->
 consensus(TrueVote, FalseVote, 1) ->
     receive
 	true ->
-	    io:format("true]~n");
+        LastTrueVote = TrueVote + 1,
+	    io:format("true]~n"),
+        ConsensusResult = LastTrueVote > FalseVote,
+        io:format("Consensus: [~p]~n",[ConsensusResult]);
 	false ->
-	    io:format("false]~n")
-    end,
-    ConsensusResult = TrueVote > FalseVote,
-    io:format("Consensus: [~p]~n",[ConsensusResult]);
+        LastFalseVote = FalseVote + 1,
+	    io:format("false]~n"),
+        ConsensusResult = TrueVote > LastFalseVote,
+        io:format("Consensus: [~p]~n",[ConsensusResult])
+    end;
 
 consensus(TrueVote, FalseVote, WaitingVoter) ->
     receive
