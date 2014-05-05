@@ -14,32 +14,22 @@ voter(OutputProcess) ->
     end.
 
 
-consensus(TrueVote, FalseVote, 1) ->
-    receive
-	true ->
-        LastTrueVote = TrueVote + 1,
-	    io:format("true]~n"),
-        ConsensusResult = LastTrueVote > FalseVote;
-	false ->
-        LastFalseVote = FalseVote + 1,
-	    io:format("false]~n"),
-        ConsensusResult = TrueVote > LastFalseVote
-    end,
-    io:format("Consensus: [~p]~n",[ConsensusResult]);
+consensus(TrueVote, FalseVote, VoteList, 0) ->
+    ConsensusResult = TrueVote > FalseVote,
+    {VoteList, ConsensusResult};
 
-consensus(TrueVote, FalseVote, WaitingVoter) ->
+consensus(TrueVote, FalseVote, VoteList, WaitingVoter) ->
     receive
 	true ->
-	    io:format("true, "),
-	    consensus(TrueVote+1, FalseVote, WaitingVoter - 1);
+	    consensus(TrueVote+1, FalseVote,VoteList ++ [true], WaitingVoter - 1);
 	false ->
-	    io:format("false, "),
-	    consensus(TrueVote, FalseVote+1, WaitingVoter - 1)
+	    consensus(TrueVote, FalseVote+1,VoteList ++ [false], WaitingVoter - 1)
     end.
 
 start_vote() ->
-    io:format("Vote Result: ["),
     spawn(?MODULE, voter, [self()]),
     spawn(?MODULE, voter, [self()]),
     spawn(?MODULE, voter, [self()]),
-    consensus(0, 0, 3).
+    {VoteList, ConsensusResult} = consensus(0, 0, [], 3),
+    io:format("Vote Result: ~p~n", [VoteList]),
+    io:format("Consensus: [~p]~n", [ConsensusResult]).
