@@ -10,27 +10,21 @@ voter(OutputProcess) ->
     Vote = (T rem 2) =:= 0,
     receive
     after N ->
-	    OutputProcess ! Vote
+            OutputProcess ! {Vote, self()}
     end.
 
 
-consensus(TrueVote, FalseVote, VoteList, 0) ->
-    ConsensusResult = TrueVote > FalseVote,
-    {VoteList, ConsensusResult};
-
-consensus(TrueVote, FalseVote, VoteList, WaitingVoter) ->
-    receive
-	true ->
-	    consensus(TrueVote+1, FalseVote,VoteList ++ [true], WaitingVoter - 1);
-	false ->
-	    consensus(TrueVote, FalseVote+1,VoteList ++ [false], WaitingVoter - 1)
-    end.
-
+consensus(VoteList) ->
+    TrueVote = length([True || True <- VoteList, True =:= true]),
+    FalseVote = length([False || False <- VoteList, False =:= false]),
+    TrueVote > FalseVote.
 
 start_vote() ->
-    spawn(?MODULE, voter, [self()]),
-    spawn(?MODULE, voter, [self()]),
-    spawn(?MODULE, voter, [self()]),
-    {VoteList, ConsensusResult} = consensus(0, 0, [], 3),
+    VoteList = rx:future([
+        spawn(?MODULE, voter, [self()]),
+        spawn(?MODULE, voter, [self()]),
+        spawn(?MODULE, voter, [self()])
+    ]),
+    ConsensusResult = consensus(VoteList),
     io:format("Vote Result: ~p~n", [VoteList]),
     io:format("Consensus: [~p]~n", [ConsensusResult]).
